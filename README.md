@@ -93,4 +93,41 @@ Must contain these columns:
 - Error handling and sanitization
 
 ## Support
-For issues or questions, please contact [Your Contact Information] 
+For issues or questions, please contact [Your Contact Information]
+
+## Containerized Version
+
+A containerized version of this tool is available for integration with other warehouse allocation systems. See [README_CONTAINER.md](README_CONTAINER.md) for details.
+
+### Containerized Features
+- Standard file processing interface
+- Compatible with container orchestration
+- Proper logging implementation
+- Comprehensive error handling
+- Command-line and programmatic usage options
+
+### Running the Containerized Version
+```bash
+# Build the container
+docker build -t delay-tracker .
+
+# Run with input and output mounted from host
+docker run -v $(pwd)/data:/app/data delay-tracker /app/data/input.xlsx /app/data/output.xlsx
+```
+
+### Integration Example
+```python
+from processor import process_file
+
+# Process a file with the standardized interface
+result = process_file("input.xlsx", "output.xlsx")
+```
+
+### Testing the Containerized Version
+```bash
+# Generate a sample input file
+python generate_sample_input.py
+
+# Process the sample input
+python processor.py data/sample_input.xlsx data/results.xlsx
+``` 

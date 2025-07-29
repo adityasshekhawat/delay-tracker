@@ -6,7 +6,6 @@ import io
 import os
 import hmac
 import hashlib
-
 # Set page config
 st.set_page_config(
     page_title="Delivery Trip Default Risk Analyzer",
@@ -31,6 +30,29 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+def read_csv_with_encoding(file_content, **kwargs):
+    """Read CSV with multiple encoding attempts."""
+    encodings_to_try = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1', 'utf-16']
+    
+    for enc in encodings_to_try:
+        try:
+            # Reset file pointer
+            file_content.seek(0)
+            
+            # Read with specific encoding
+            df = pd.read_csv(file_content, encoding=enc, **kwargs)
+            st.success(f"Successfully read file with {enc} encoding")
+            return df
+        except UnicodeDecodeError as e:
+            st.warning(f"Failed to read with {enc} encoding")
+            continue
+        except Exception as e:
+            st.warning(f"Error reading file with {enc} encoding: {str(e)}")
+            continue
+    
+    # If all encodings fail, raise an error
+    raise ValueError("Could not read the file with any supported encoding")
 
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -171,13 +193,18 @@ def main():
         try:
             # Read the files with additional error handling
             try:
-                nodes_df = pd.read_csv(nodes_file, na_values=['', ' '], thousands=',')
+                st.info("Reading node.csv file...")
+                nodes_df = read_csv_with_encoding(nodes_file, na_values=['', ' '], thousands=',')
+                st.success(f"Successfully loaded {len(nodes_df)} records from node.csv")
             except Exception as e:
                 st.error(f"Error reading node.csv: {str(e)}")
+                st.info("Try saving your CSV file with UTF-8 encoding or contact support for help.")
                 st.stop()
                 
             try:
+                st.info("Reading predictions file...")
                 predictions_df = pd.read_excel(predictions_file)
+                st.success(f"Successfully loaded {len(predictions_df)} predictions")
             except Exception as e:
                 st.error(f"Error reading predictions file: {str(e)}")
                 st.stop()
@@ -191,10 +218,12 @@ def main():
             
             if missing_node_cols:
                 st.error(f"Missing required columns in node.csv: {', '.join(missing_node_cols)}")
+                st.info("Available columns: " + ", ".join(nodes_df.columns.tolist()))
                 st.stop()
             
             if missing_pred_cols:
                 st.error(f"Missing required columns in predictions file: {', '.join(missing_pred_cols)}")
+                st.info("Available columns: " + ", ".join(predictions_df.columns.tolist()))
                 st.stop()
             
             # Display data overview
